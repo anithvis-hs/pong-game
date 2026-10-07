@@ -1,4 +1,4 @@
-import { collides, resolveCollision } from "./collision.js";
+import { collides, resolveCollision, pushOut } from "./collision.js";
 import { clamp } from "./math.js";
 const objects = [
     { kind: "paddle", x: 200, y: 140, width: 40, height: 40, speed: 240 },
@@ -56,8 +56,23 @@ function update(deltaTime) {
     }
     for (const object of objects) {
         if (object.kind === "ball") {
+            for (const wall of objects) {
+                if (wall.kind === "wall") {
+                    if (collides(wall, object)) {
+                        resolveCollision(wall, object);
+                    }
+                }
+            }
             if (collides(paddle, object)) {
                 resolveCollision(paddle, object);
+            }
+        }
+    }
+    // push out the paddle from the wall
+    for (const wall of objects) {
+        if (wall.kind === "wall") {
+            if (collides(wall, paddle)) {
+                pushOut(wall, paddle);
             }
         }
     }
