@@ -1,5 +1,5 @@
 import { Paddle, Ball, Wall, Entity } from "./entities.js";
-import { collides, resolveCollision } from "./collision.js";
+import { collides, resolveCollision, pushOut } from "./collision.js";
 import { clamp } from "./math.js";
 
 const objects: Entity[] = [
@@ -67,8 +67,24 @@ function update(deltaTime: number) {
 
     for (const object of objects) {
         if (object.kind === "ball") {
+            for (const wall of objects) {
+                if (wall.kind === "wall") {
+                    if (collides(wall, object)) {
+                        resolveCollision(wall, object);
+                    }
+                }
+            }
             if (collides(paddle, object)) {
                 resolveCollision(paddle, object);
+            }
+        }
+    }
+
+    // push out the paddle from the wall
+    for (const wall of objects) {
+        if (wall.kind === "wall") {
+            if (collides(wall, paddle)) {
+                pushOut(wall, paddle);
             }
         }
     }
