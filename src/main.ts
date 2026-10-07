@@ -12,6 +12,7 @@ type Entity = {
 const objects: Entity[] = [
     { x: 200, y: 140, width: 40, height: 40, speed: 4, controllable: true, velocityX: 0, velocityY: 0 },
     { x: 50, y: 50, width: 20, height: 20, speed: 2, controllable: false, velocityX: 1, velocityY: 2 },
+    { x: 300, y: 200, width: 20, height: 20, speed: 2, controllable: false, velocityX: -2, velocityY: 1 },
 ];
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -43,6 +44,27 @@ function overlap1D(aLeft: number, aRight: number, bLeft: number, bRight: number)
 
 function collides(a: Entity, b: Entity): boolean {
     return overlap1D(a.x, a.x + a.width, b.x, b.x + b.width) && overlap1D(a.y, a.y + a.height, b.y, b.y + b.height);
+}
+
+function resolveCollision(paddle: Entity, ball: Entity): void {
+    const overlapX = Math.min(paddle.x + paddle.width, ball.x + ball.width) - Math.max(paddle.x, ball.x);
+    const overlapY = Math.min(paddle.y + paddle.height, ball.y + ball.height) - Math.max(paddle.y, ball.y);
+
+    if (overlapX < overlapY) {
+        ball.velocityX *= -1;
+        if (ball.x + ball.width / 2 < paddle.x + paddle.width / 2) {
+            ball.x = paddle.x - ball.width; // ball on the left of the paddle
+        } else {
+            ball.x = paddle.x + paddle.width; // ball on the right of the paddle
+        }
+    } else {
+        ball.velocityY *= -1;
+        if (ball.y + ball.height / 2 < paddle.y + paddle.height / 2) {
+            ball.y = paddle.y - ball.height; // ball above the paddle
+        } else {
+            ball.y = paddle.y + paddle.height; // ball below the paddle
+        }
+    }
 }
 
 function update() {
@@ -86,29 +108,10 @@ function update() {
         object.y = clamp(object.y, 0, canvas.height - object.height);
     }
 
-    if (collides(objects[0], objects[1])) {
-        // compute overlapX and overlapY here, using objects[0] and objects[1]
-        const overlapX = Math.min(objects[0].x + objects[0].width, objects[1].x + objects[1].width) - Math.max(objects[0].x, objects[1].x);
-        const overlapY = Math.min(objects[0].y + objects[0].height, objects[1].y + objects[1].height) - Math.max(objects[0].y, objects[1].y);
-
-        // side hit condition
-        if (overlapX < overlapY) {
-            // existing x logic
-            objects[1].velocityX *= -1;
-
-            if (objects[1].x + objects[1].width / 2 < objects[0].x + objects[0].width / 2) {
-                objects[1].x = objects[0].x - objects[1].width; // ball on the left of the paddle
-            } else {
-                objects[1].x = objects[0].x + objects[0].width; // ball on the right of the paddle
-            }
-        } else {
-            // y logic
-            objects[1].velocityY *= -1;
-
-            if (objects[1].y + objects[1].height / 2 < objects[0].y + objects[0].height / 2) {
-                objects[1].y = objects[0].y - objects[1].height; // ball above the paddle
-            } else {
-                objects[1].y = objects[0].y + objects[0].height; // ball below the paddle
+    for (const object of objects) {
+        if (!object.controllable) {
+            if (collides(objects[0], object)) {
+                resolveCollision(objects[0], object);
             }
         }
     }
