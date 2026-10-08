@@ -2,6 +2,10 @@ import { collides, resolveCollision, pushOut } from "./collision.js";
 import { clamp } from "./math.js";
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+let scoreHuman = 0;
+let scoreComputer = 0;
+const winScore = 5;
+let gameOver = false;
 function randomBall() {
     const size = 20;
     return {
@@ -26,13 +30,28 @@ function createBall(existing) {
     }
     return ball;
 }
-const objects = [
+let objects = [
     { kind: "paddle", x: 20, y: (canvas.height - 60) / 2, width: 10, height: 60, speed: 240, controller: "human" },
     { kind: "paddle", x: canvas.width - 30, y: (canvas.height - 60) / 2, width: 10, height: 60, speed: 240, controller: "computer" },
     { kind: "wall", x: 0, y: 0, width: canvas.width, height: 10, color: "red" },
     { kind: "wall", x: 0, y: canvas.height - 10, width: canvas.width, height: 10, color: "red" },
 ];
 objects.push(createBall(objects));
+function resetGame() {
+    scoreHuman = 0;
+    scoreComputer = 0;
+    gameOver = false;
+    objects = objects.filter(o => o.kind !== "ball");
+    objects.push(createBall(objects));
+    const humanPaddle = objects.find((o) => o.kind === "paddle" && o.controller === "human");
+    if (humanPaddle) {
+        humanPaddle.y = (canvas.height - humanPaddle.height) / 2;
+    }
+    const computerPaddle = objects.find((o) => o.kind === "paddle" && o.controller === "computer");
+    if (computerPaddle) {
+        computerPaddle.y = (canvas.height - computerPaddle.height) / 2;
+    }
+}
 // know whether the current key is held
 const keys = {};
 window.addEventListener("keydown", (e) => {
@@ -42,6 +61,12 @@ window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
 });
 function update(deltaTime) {
+    if (gameOver && keys["Enter"]) {
+        resetGame();
+    }
+    if (gameOver) {
+        return;
+    }
     const target = objects.find(o => o.kind === "ball");
     const paddle = objects.find((o) => o.kind === "paddle" && o.controller === "human");
     if (!paddle) {
@@ -57,6 +82,7 @@ function update(deltaTime) {
             computerPaddle.y += computerPaddle.speed * deltaTime;
         }
     }
+    /* keyboard control for human paddle */
     // if (keys["ArrowRight"]) {
     //     paddle.x += paddle.speed * deltaTime;
     // }
@@ -75,10 +101,16 @@ function update(deltaTime) {
             object.x += object.velocityX * deltaTime;
             object.y += object.velocityY * deltaTime;
             if (object.x > canvas.width - object.width) {
-                object.velocityX *= -1;
+                scoreHuman++;
+                object.x = (canvas.width - object.width) / 2;
+                object.y = (canvas.height - object.height) / 2;
+                // object.velocityX *= -1;
             }
             if (object.x < 0) {
-                object.velocityX *= -1;
+                scoreComputer++;
+                object.x = (canvas.width - object.width) / 2;
+                object.y = (canvas.height - object.height) / 2;
+                // object.velocityX *= -1;
             }
             if (object.y > canvas.height - object.height) {
                 object.velocityY *= -1;
@@ -136,6 +168,10 @@ function update(deltaTime) {
             }
         }
     }
+    /* Score and game over checks */
+    if (scoreHuman >= winScore || scoreComputer >= winScore) {
+        gameOver = true;
+    }
 }
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -147,6 +183,14 @@ function draw() {
             ctx.fillStyle = "black";
         }
         ctx.fillRect(object.x, object.y, object.width, object.height);
+    }
+    ctx.textAlign = "left";
+    ctx.font = "18px sans-serif";
+    ctx.fillText("You: " + scoreHuman, 20, 40);
+    ctx.fillText("Computer: " + scoreComputer, 20, 80);
+    if (gameOver) {
+        ctx.textAlign = "center";
+        ctx.fillText(scoreHuman >= winScore ? "You win!" : "Computer wins!", canvas.width / 2, canvas.height / 2);
     }
 }
 let lastTime = 0;
