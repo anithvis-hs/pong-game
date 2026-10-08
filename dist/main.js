@@ -21,7 +21,7 @@ function createBall(existing) {
         ball = randomBall();
         attempts++;
     }
-    if (attempts >= 100) {
+    if (existing.some(e => collides(e, ball))) {
         throw new Error("Failed to create a ball.");
     }
     return ball;
