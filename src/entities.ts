@@ -5,6 +5,7 @@ export type Paddle = {
     width: number;
     height: number;
     speed: number;
+    controller: "human" | "computer";
 }
 
 export type Ball = {

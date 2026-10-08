@@ -27,10 +27,11 @@ function createBall(existing) {
     return ball;
 }
 const objects = [
-    { kind: "paddle", x: 200, y: 140, width: 40, height: 40, speed: 240 },
-    { kind: "wall", x: 100, y: 100, width: 80, height: 10, color: "red" },
+    { kind: "paddle", x: 20, y: (canvas.height - 60) / 2, width: 10, height: 60, speed: 240, controller: "human" },
+    { kind: "paddle", x: canvas.width - 30, y: (canvas.height - 60) / 2, width: 10, height: 60, speed: 240, controller: "computer" },
+    { kind: "wall", x: 0, y: 0, width: canvas.width, height: 10, color: "red" },
+    { kind: "wall", x: 0, y: canvas.height - 10, width: canvas.width, height: 10, color: "red" },
 ];
-objects.push(createBall(objects));
 objects.push(createBall(objects));
 // know whether the current key is held
 const keys = {};
@@ -41,16 +42,27 @@ window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
 });
 function update(deltaTime) {
-    const paddle = objects.find(o => o.kind === "paddle");
+    const target = objects.find(o => o.kind === "ball");
+    const paddle = objects.find((o) => o.kind === "paddle" && o.controller === "human");
     if (!paddle) {
         throw new Error("Paddle not found");
     }
-    if (keys["ArrowRight"]) {
-        paddle.x += paddle.speed * deltaTime;
+    const computerPaddle = objects.find((o) => o.kind === "paddle" && o.controller === "computer");
+    if (target && computerPaddle) {
+        // the AI paddle's if / else if goes here
+        if (target.y < computerPaddle.y) {
+            computerPaddle.y -= computerPaddle.speed * deltaTime;
+        }
+        else if (target.y > computerPaddle.y + computerPaddle.height) {
+            computerPaddle.y += computerPaddle.speed * deltaTime;
+        }
     }
-    if (keys["ArrowLeft"]) {
-        paddle.x -= paddle.speed * deltaTime;
-    }
+    // if (keys["ArrowRight"]) {
+    //     paddle.x += paddle.speed * deltaTime;
+    // }
+    // if (keys["ArrowLeft"]) {
+    //     paddle.x -= paddle.speed * deltaTime;
+    // }
     if (keys["ArrowUp"]) {
         paddle.y -= paddle.speed * deltaTime;
     }
