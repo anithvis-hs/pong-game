@@ -27,23 +27,36 @@ function hitSide(obstacle: Entity, mover: Entity): Hit {
     }
 }
 
-export function resolveCollision(obstacle: Paddle | Wall, ball: Ball): void {
+export function resolveCollision(obstacle: Paddle | Wall | Ball, ball: Ball): void {
     const side = hitSide(obstacle, ball);
     switch (side) {
         case "left":
             ball.velocityX *= -1;
+            // if the obstacle is a ball, reverse its velocity
+            if (obstacle.kind === "ball") {
+                obstacle.velocityX *= -1;
+            }
             ball.x = obstacle.x - ball.width;
             break;
         case "right":
             ball.velocityX *= -1;
+            if (obstacle.kind === "ball") {
+                obstacle.velocityX *= -1;
+            }
             ball.x = obstacle.x + obstacle.width;
             break;
         case "above":
             ball.velocityY *= -1;
+            if (obstacle.kind === "ball") {
+                obstacle.velocityY *= -1;
+            }
             ball.y = obstacle.y - ball.height;
             break;
         case "below":
             ball.velocityY *= -1;
+            if (obstacle.kind === "ball") {
+                obstacle.velocityY *= -1;
+            }
             ball.y = obstacle.y + obstacle.height;
             break;
         default: {
